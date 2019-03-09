@@ -83,8 +83,13 @@ public class ServiceObject {
     }
 
     public static List<YandexSpellerAnswer> getAnswers(Response response) {
-        return new Gson().fromJson(response.asString().trim(), new TypeToken<List<YandexSpellerAnswer>>() {
+
+        List<List<YandexSpellerAnswer>> answers = new Gson().fromJson(response.asString().trim(), new TypeToken<List<List<YandexSpellerAnswer>>>() {
         }.getType());
+        return answers
+                .stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
 
