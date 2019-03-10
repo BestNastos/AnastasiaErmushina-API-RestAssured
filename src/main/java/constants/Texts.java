@@ -18,5 +18,5 @@ public class Texts {
     public static final String ENG_WITH_URL = "Hellohttps://www.google.ru/";
     public static final String ENG_NO_CAPITALS = "london";
     public static final String ENG_CORRECT = "Hello";
-    public static final String ENG_MISSPELLED = "Helloj";
+    public static final String ENG_MISSPELLED = "jnew";
 }

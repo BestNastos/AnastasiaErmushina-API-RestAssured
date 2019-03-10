@@ -3,6 +3,7 @@ package core;
 import beans.YandexSpellerAnswer;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import constants.Format;
 import constants.Language;
 import constants.Option;
 import io.restassured.RestAssured;
@@ -22,7 +23,7 @@ import static org.hamcrest.Matchers.lessThan;
 
 public class ServiceObject {
 
-    private static final String SPELLER_URI = "https://speller.yandex.net/services/spellservice.json/checkTexts";
+    public static final String SPELLER_URI = "https://speller.yandex.net/services/spellservice.json/checkTexts";
     private Map<String, List<String>> parameters;
 
     private ServiceObject(Map<String, List<String>> parameters) {
@@ -54,13 +55,14 @@ public class ServiceObject {
             return this;
         }
 
-        public ApiRequestBuilder setFormat(String... format) {
-            parameters.put(FORMAT, Arrays.asList(format));
+        public ApiRequestBuilder setText(String... text) {
+            parameters.put(TEXT, Arrays.asList(text));
             return this;
         }
 
-        public ApiRequestBuilder setText(String... text) {
-            parameters.put(TEXT, Arrays.asList(text));
+        public ApiRequestBuilder setFormat(Format... format) {
+            List<String> form = Arrays.stream(format).map(f -> f.format).collect(Collectors.toList());
+            parameters.put(TEXT, form);
             return this;
         }
 
@@ -69,22 +71,28 @@ public class ServiceObject {
         }
     }
 
-    public Response sendRequest() {
+    public Response sendGetRequest() {
         return RestAssured
-                .given(ServiceObject.requestSpecification())
+                .given(requestSpecification())
                 .queryParams(parameters)
                 .get(SPELLER_URI)
                 .prettyPeek();
     }
 
-    public static List<YandexSpellerAnswer> getAnswers(Response response) {
+    public Response sendPostRequest() {
+        return RestAssured
+                .given(requestSpecification())
+                .queryParams(parameters)
+                .post(SPELLER_URI)
+                .prettyPeek();
+    }
 
-        List<List<YandexSpellerAnswer>> answers = new Gson().fromJson(response.asString().trim(), new TypeToken<List<List<YandexSpellerAnswer>>>() {
-        }.getType());
-        return answers
-                .stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+    public static List<String> getResult(Response response) {
+        List<List<YandexSpellerAnswer>> answers = new Gson()
+                        .fromJson(response.asString().trim(), new TypeToken<List<List<YandexSpellerAnswer>>>() {
+                        }.getType());
+        List<YandexSpellerAnswer> flattenedList = answers.stream().flatMap(List::stream).collect(Collectors.toList());
+        return flattenedList.stream().map(res -> res.word).collect(Collectors.toList());
     }
 
 
