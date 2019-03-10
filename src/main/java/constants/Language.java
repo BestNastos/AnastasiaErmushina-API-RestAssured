@@ -4,7 +4,8 @@ public enum Language {
 
     ENGLISH("en"),
     RUSSIAN("ru"),
-    UKRAINIAN("uk");
+    UKRAINIAN("uk"),
+    INCORRECT_LANGUAGE("ennn");
 
     public String value;
 

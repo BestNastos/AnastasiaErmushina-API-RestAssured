@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import constants.Language;
 import constants.Option;
-import constants.Text;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
@@ -61,10 +60,6 @@ public class ServiceObject {
         }
 
         public ApiRequestBuilder setText(String... text) {
-//            List<String> textsToCheck = Arrays
-//                    .stream(text)
-//                    .map(value -> value.text)
-//                    .collect(Collectors.toList());
             parameters.put(TEXT, Arrays.asList(text));
             return this;
         }

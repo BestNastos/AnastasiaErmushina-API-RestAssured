@@ -1,16 +1,23 @@
 
+import constants.Option;
 import io.restassured.response.Response;
+import org.hamcrest.text.MatchesPattern;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static constants.Language.*;
+import static constants.Option.*;
 import static constants.Texts.*;
 import static core.ServiceObject.*;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.text.MatchesPattern.*;
 
 public class ApiTests {
 
@@ -68,26 +75,28 @@ public class ApiTests {
     }
 
     @Test //BUG FOUND
-    public void checkIncorrectTextsWithLinks(){
-        String[] texts = {ENG_WITH_URL, RUS_WITH_URL, UKR_WITH_URL};
+    public void checkIncorrectTextsWithLinks() {
+        String[] given = {ENG_WITH_URL, RUS_WITH_URL, UKR_WITH_URL};
+        String[] expected = {ENG_CORRECT, RUS_CORRECT, UKR_CORRECT};
         Response response = requestBuilder()
                 .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
-                .setText(texts)
+                .setText(given)
                 .buildRequest()
                 .sendRequest();
-        List<String> result = getAnswers(response)
+        List<String> actual = getAnswers(response)
                 .stream()
                 .map(res -> res.word)
                 .collect(Collectors.toList());
-        if (result.size() != texts.length) {
-            for (String text : texts) {
-                assertThat("API failed to find error in text(s) mixed with URLs: " + text, result, contains(text));
+        if (actual.size() != expected.length) {
+            for (int i = 0; i < expected.length; i++) {
+                assertThat("API failed to find error in text mixed with URLs: " + given[i],
+                        actual, contains(matchesPattern(expected[i] + ".*")));
             }
         }
     }
 
     @Test //BUG FOUND
-    public void checkProperNamesWithLowerCase(){
+    public void checkIncorrectProperNamesWithLowerCase() {
         String[] texts = {ENG_NO_CAPITALS, RUS_NO_CAPITALS, UKR_NO_CAPITALS};
         Response response = requestBuilder()
                 .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
@@ -103,6 +112,50 @@ public class ApiTests {
                 assertThat("API failed to find error in proper names with lower case: " + text, result, contains(text));
             }
         }
+    }
+
+    @Test
+    public void checkIncorrectLanguageParameter() {
+        requestBuilder()
+                .setLanguage(INCORRECT_LANGUAGE)
+                .setText(ENG_CORRECT)
+                .buildRequest()
+                .sendRequest()
+                .then()
+                .assertThat()
+                .body(containsString("SpellerService: Invalid parameter 'lang'"));
+    }
+
+    @Test
+    public void checkIgnoreDigitsOption() {
+        Response response = requestBuilder()
+                .setLanguage(RUSSIAN, ENGLISH, UKRAINIAN)
+                .setText(RUS_WITH_DIGITS, ENG_WITH_DIGITS, UKR_WITH_DIGITS)
+                .setOptions(IGNORE_DIGITS)
+                .buildRequest()
+                .sendRequest();
+        List<String> result = getAnswers(response)
+                .stream()
+                .map(res -> res.word)
+                .collect(Collectors.toList());
+        assertThat("API reported errors in text(s) with digits despite 'ignore digits' option: " + result,
+                result, hasSize(0));
+    }
+
+    @Test
+    public void checkIgnoreLinksOption() {
+        Response response = requestBuilder()
+                .setLanguage(RUSSIAN, ENGLISH, UKRAINIAN)
+                .setText(RUS_WITH_URL, ENG_WITH_URL, UKR_WITH_URL)
+                .setOptions(IGNORE_URLS)
+                .buildRequest()
+                .sendRequest();
+        List<String> result = getAnswers(response)
+                .stream()
+                .map(res -> res.word)
+                .collect(Collectors.toList());
+        assertThat("API reported errors in text(s) with URLs despite 'ignore URLs' option: " + result,
+                result, hasSize(0));
     }
 
 
