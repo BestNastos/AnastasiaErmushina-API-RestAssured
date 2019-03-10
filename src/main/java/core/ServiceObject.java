@@ -60,12 +60,12 @@ public class ServiceObject {
             return this;
         }
 
-        public ApiRequestBuilder setText(Text... text) {
-            List<String> textsToCheck = Arrays
-                    .stream(text)
-                    .map(value -> value.text)
-                    .collect(Collectors.toList());
-            parameters.put(TEXT, textsToCheck);
+        public ApiRequestBuilder setText(String... text) {
+//            List<String> textsToCheck = Arrays
+//                    .stream(text)
+//                    .map(value -> value.text)
+//                    .collect(Collectors.toList());
+            parameters.put(TEXT, Arrays.asList(text));
             return this;
         }
 
