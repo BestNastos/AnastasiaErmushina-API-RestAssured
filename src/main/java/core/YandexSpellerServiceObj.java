@@ -25,6 +25,8 @@ public class YandexSpellerServiceObj {
 
     public static final String SPELLER_URI = "https://speller.yandex.net/services/spellservice.json/checkTexts";
     private static long requestNumber = 0L;
+
+    //BEGINNING OF BUILDER PATTERN
     private Map<String, List<String>> parameters;
 
     private YandexSpellerServiceObj(Map<String, List<String>> parameters) {
@@ -35,7 +37,6 @@ public class YandexSpellerServiceObj {
         return new ApiRequestBuilder();
     }
 
-    //BEGINNING OF BUILDER PATTERN
     public static class ApiRequestBuilder {
         private Map<String, List<String>> parameters = new HashMap<>();
 

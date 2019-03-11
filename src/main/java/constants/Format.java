@@ -7,7 +7,7 @@ public enum Format {
 
     public String format;
 
-    Format(String format){
+    Format(String format) {
         this.format = format;
     }
 }
