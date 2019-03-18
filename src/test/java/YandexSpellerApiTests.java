@@ -1,4 +1,6 @@
 import beans.YandexSpellerAnswer;
+import constants.Language;
+import core.DataProvidersForSpeller;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -14,94 +16,88 @@ import static org.hamcrest.Matchers.*;
 
 public class YandexSpellerApiTests {
 
-    @Test
-    public void checkCorrectTexts() {
+    @Test(dataProvider = "correctTextsProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkCorrectTexts(Language language, String text) {
         List<String> result = getStringResult(
                 requestBuilder()
-                        .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
-                        .setText(ENG_CORRECT, RUS_CORRECT, UKR_CORRECT)
+                        .setLanguage(language)
+                        .setText(text)
                         .buildRequest()
                         .sendGetRequest());
         assertThat("API reported errors in correct text: " + result, result.isEmpty());
     }
 
-    @Test //BUG WAS FOUND
-    public void checkMisspelledTexts() {
-        String[] texts = {ENG_MISSPELLED, RUS_MISSPELLED, UKR_MISSPELLED};
+    //BUG WAS FOUND
+    @Test(dataProvider = "misspelledTextsProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkMisspelledTexts(Language language, String text) {
         List<String> result = getStringResult(
                 requestBuilder()
-                        .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
-                        .setText(texts)
+                        .setLanguage(language)
+                        .setText(text)
                         .buildRequest()
                         .sendGetRequest());
-        if (result.size() != texts.length) {
-            for (String text : texts) {
-                assertThat("API failed to find spelling error in text: " + text, result.contains(text));
-            }
-        }
+        assertThat("API failed to find spelling error in text: " + text,
+                result.contains(text));
     }
 
     @Test
-    public void checkErrorCodeForMisspelling(){
-        List<YandexSpellerAnswer> answers = getAnswers(requestBuilder()
-                .setLanguage(RUSSIAN)
-                .setText(RUS_MISSPELLED)
-                .buildRequest()
-                .sendGetRequest());
+    public void checkErrorCodeForMisspelling() {
+        List<YandexSpellerAnswer> answers = getAnswers(
+                requestBuilder()
+                        .setLanguage(RUSSIAN)
+                        .setText(RUS_MISSPELLED)
+                        .buildRequest()
+                        .sendGetRequest());
         if (!answers.isEmpty()) {
             assertThat("API displays wrong error code: " + answers.get(0).code + " instead of: "
                     + ERROR_UNKNOWN_WORD.code, answers.get(0).code == ERROR_UNKNOWN_WORD.code);
-        } else checkMisspelledTexts();
+        } else checkMisspelledTexts(RUSSIAN, RUS_MISSPELLED);
     }
 
-    @Test //BUG WAS FOUND
-    public void checkIncorrectTextsWithDigits() {
-        String[] texts = {ENG_WITH_DIGITS, RUS_WITH_DIGITS, UKR_WITH_DIGITS};
+    //BUGS WERE FOUND
+    @Test(dataProvider = "textsWithDigitsProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkIncorrectTextsWithDigits(Language language, String text) {
         List<String> result = getStringResult(
                 requestBuilder()
-                        .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
-                        .setText(texts)
+                        .setLanguage(language)
+                        .setText(text)
                         .buildRequest()
                         .sendGetRequest());
-        if (result.size() != texts.length) {
-            for (String text : texts) {
-                assertThat("API failed to find error in text with digits: " + text,
-                        result.contains(text));
-            }
-        }
+        assertThat("API failed to find error in text with digits: " + text,
+                result.contains(text));
+
+
     }
 
-    @Test //BUG WAS FOUND
-    public void checkIncorrectTextsWithLinks() {
-        String[] texts = {ENG_WITH_URL, RUS_WITH_URL, UKR_WITH_URL};
+    //BUGS WERE FOUND
+    @Test(dataProvider = "textsWithLinksProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkIncorrectTextsWithLinks(Language language, String text) {
         List<String> result = getStringResult(
                 requestBuilder()
-                        .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
-                        .setText(texts)
+                        .setLanguage(language)
+                        .setText(text)
                         .buildRequest()
                         .sendGetRequest());
-        if (result.size() != texts.length) {
-            for (String text : texts) {
-                assertThat("API failed to find error in text with URL: " + text,
-                        result.contains(text));
-            }
-        }
+        assertThat("API failed to find error in text with URL: " + text,
+                result.contains(text));
     }
 
-    @Test //BUG WAS FOUND
-    public void checkIncorrectProperNamesWithLowerCase() {
-        String[] texts = {ENG_NO_CAPITALS, RUS_NO_CAPITALS, UKR_NO_CAPITALS};
-        List<String> result = getStringResult(requestBuilder()
-                .setLanguage(ENGLISH, RUSSIAN, UKRAINIAN)
-                .setText(texts)
-                .buildRequest()
-                .sendGetRequest());
-        if (result.size() != texts.length) {
-            for (String text : texts) {
-                assertThat("API failed to find error in proper names with lower case: " + text,
-                        result.contains(text));
-            }
-        }
+    //BUGS WERE FOUND
+    @Test(dataProvider = "properNamesWithLowerCaseProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkIncorrectProperNamesWithLowerCase(Language language, String text) {
+        List<String> result = getStringResult(
+                requestBuilder()
+                        .setLanguage(language)
+                        .setText(text)
+                        .buildRequest()
+                        .sendGetRequest());
+        assertThat("API failed to find error in proper name with lower case: " + text,
+                result.contains(text));
     }
 
     @Test
@@ -116,12 +112,13 @@ public class YandexSpellerApiTests {
                 .body(containsString("SpellerService: Invalid parameter 'lang'"));
     }
 
-    @Test
-    public void checkIgnoreDigitsOption() {
+    @Test(dataProvider = "textsWithDigitsProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkIgnoreDigitsOption(Language language, String text) {
         List<String> result = getStringResult(
                 requestBuilder()
-                        .setLanguage(RUSSIAN, ENGLISH, UKRAINIAN)
-                        .setText(RUS_WITH_DIGITS, ENG_WITH_DIGITS, UKR_WITH_DIGITS)
+                        .setLanguage(language)
+                        .setText(text)
                         .setOptions(IGNORE_DIGITS)
                         .buildRequest()
                         .sendGetRequest());
@@ -129,17 +126,18 @@ public class YandexSpellerApiTests {
                 result.isEmpty());
     }
 
-    @Test
-    public void checkIgnoreUrlsOption() {
+    @Test(dataProvider = "textsWithLinksProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkIgnoreUrlsOption(Language language, String text) {
         List<String> result = getStringResult(
                 requestBuilder()
-                        .setLanguage(UKRAINIAN, RUSSIAN, ENGLISH)
-                        .setText(UKR_WITH_URL, RUS_WITH_URL, ENG_WITH_URL)
+                        .setLanguage(language)
+                        .setText(text)
                         .setOptions(IGNORE_URLS)
                         .buildRequest()
                         .sendGetRequest());
-        assertThat("API reported errors in text with URL despite 'ignore URLs' option: " + result,
-                result.isEmpty());
+        assertThat("API reported errors in text with URL despite 'ignore URLs' option: "
+                + result, result.isEmpty());
     }
 
     @Test
