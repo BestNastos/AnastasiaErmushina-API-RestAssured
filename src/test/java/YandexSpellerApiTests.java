@@ -3,6 +3,7 @@ import constants.Language;
 import core.DataProvidersForSpeller;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static constants.ErrorCode.*;
@@ -164,5 +165,20 @@ public class YandexSpellerApiTests {
                 .specification(badResponseSpecification())
                 .and()
                 .body(containsString("SpellerService: Invalid parameter 'format'"));
+    }
+
+    //BUG WAS FOUND
+    @Test(dataProvider = "mixOfMisspelledTextsAndLanguagesProvider",
+            dataProviderClass = DataProvidersForSpeller.class)
+    public void checkMixOfLanguagesForMisspelledTexts(Language[] languages, String[] texts) {
+        List<String> result = getStringResult(
+                requestBuilder()
+                        .setLanguage(languages)
+                        .setText(texts)
+                        .buildRequest()
+                        .sendGetRequest());
+        assertThat("API failed to find 1 or more error(s) in the mix of texts: "
+                + Arrays.toString(texts) + " in following languages: "
+                + Arrays.toString(languages), result.size() == texts.length);
     }
 }

@@ -1,5 +1,6 @@
 package core;
 
+import constants.Language;
 import org.testng.annotations.DataProvider;
 
 import static constants.Language.*;
@@ -49,6 +50,15 @@ public class DataProvidersForSpeller {
                 {ENGLISH, ENG_NO_CAPITALS},
                 {RUSSIAN, RUS_NO_CAPITALS},
                 {UKRAINIAN, UKR_NO_CAPITALS}
+        };
+    }
+
+    @DataProvider
+    public Object[][] mixOfMisspelledTextsAndLanguagesProvider() {
+        String[] texts = {RUS_MISSPELLED, UKR_MISSPELLED, ENG_MISSPELLED};
+        Language[] languages = {ENGLISH, RUSSIAN, UKRAINIAN};
+        return new Object[][]{
+                {languages, texts}
         };
     }
 }
