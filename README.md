@@ -1,3 +1,3 @@
 # AnastasiaErmushina-API-RestAssured
 
-Testing Yandex Speller API via RestAssured
+Testing Yandex Speller API via RestAssured (EPAM lab)
